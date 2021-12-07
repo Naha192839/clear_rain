@@ -1,0 +1,10 @@
+BootStrap: localimage
+From: tensorflow_latest-gpu-py3.sif
+# singularity pull docker://tensorflow/tensorflow:latest-gpu-py3
+
+%post
+    apt-get update
+    apt install -y --no-install-recommends graphviz
+    apt-get install -y vim
+    pip install --upgrade pip
+    pip install keras==2.3 pillow ipython
