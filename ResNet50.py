@@ -25,6 +25,7 @@ model_dir = "./model"
 
 nb_train_samples = 1400
 nb_validation_samples = 200
+nb_test_samples = 400
 img_width, img_height = 224, 224
 
 train_batch_size = 64
@@ -32,9 +33,10 @@ val_batch_size = 16
 
 # train用
 train_datagen = ImageDataGenerator(rescale=1. / 255,
-# rotation_range=15,
-# width_shift_range=10,
+rotation_range=15,
+width_shift_range=0.5,
 horizontal_flip=True,
+zoom_range=0.5
 )
 
 # validation
@@ -56,7 +58,7 @@ all_acc=[]
 all_val_acc=[]
 all_test_acc=[]
 #交差検証
-for i in range(1):
+for i in range(8):
   print(val_count)
   for index, classlabel in enumerate(classes):
     val_dir = "./dataset_ver2_kfold/val/" + classlabel
@@ -97,8 +99,8 @@ for i in range(1):
     )
 
   input_tensor = Input(shape=(img_height,img_width, 3))
-  resnet50 = ResNet50V2(include_top=False, weights='imagenet',input_tensor=input_tensor,pooling='avg')
-  # resnet50 = VGG16(include_top=False, weights='imagenet',input_tensor=input_tensor,pooling='avg')
+  # resnet50 = ResNet50V2(include_top=False, weights='imagenet',input_tensor=input_tensor,pooling='avg')
+  resnet50 = ResNet50(include_top=False, weights='imagenet',input_tensor=input_tensor,pooling='avg')
 
   # 重みパラメータの凍結
   resnet50.trainable = False
@@ -114,7 +116,11 @@ for i in range(1):
   for layer in model.layers[154:]:
     layer.trainable = True
     
-  # model.summary()
+  # for layer in model.layers[:15]:
+  #   layer.trainable = False
+  # for layer in model.layers[15:]:
+  #   layer.trainable = True
+  model.summary()
 
 
 
@@ -122,14 +128,15 @@ for i in range(1):
                 optimizer=optimizers.SGD(lr=0.001, momentum=0.9,decay=0.0002),
                 metrics=['accuracy'])
   plot_model(model, show_shapes=True,show_layer_names=False,to_file='model.png')
-
+  reduce_lr = ReduceLROnPlateau(monitor='val_loss', factor=0.5,
+                              patience=3, min_lr=0.00001)
   history = model.fit(
     train_generator, 
     steps_per_epoch = train_generator.n // train_batch_size,
     validation_data = validation_generator,
     validation_steps = validation_generator.n // val_batch_size,
     epochs=ep,
-    # callbacks=[reduce_lr]
+    callbacks=[reduce_lr]
   )
 
   # Evaluate the model on the test data using `evaluate`
@@ -162,6 +169,7 @@ for i in range(1):
   plt.title('Model accuracy')
   plt.ylabel('Accuracy')
   plt.xlabel('Epoch')
+  plt.ylim(bottom=0.4)
   plt.legend(['Train', 'Val'], loc='upper left')
   plt.savefig(os.path.join("./fig/acc_fig/",str(datetime.datetime.today())+"acc.jpg"))
   plt.clf()
@@ -174,8 +182,9 @@ for i in range(1):
   plt.xlabel('Epoch')
   plt.legend(['Train', 'Val'], loc='upper left')
   plt.savefig(os.path.join("./fig/loss_fig/",str(datetime.datetime.today())+"loss.jpg"))
+  plt.clf()
 
-  model.save('./cle_model_ver2/ResNet50_'+str(num)+'.h5')    
+  model.save('./cle_model_ver2/ResNet50v1_'+str(num)+'_aug.h5')    
   num += 1
   val_count = val_count + 100
 

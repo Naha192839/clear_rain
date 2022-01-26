@@ -15,7 +15,7 @@ from keras.preprocessing.image import array_to_img, img_to_array, load_img, save
 # モデル読み込み用
 from keras.models import load_model
 #混合行列計算用
-from sklearn.metrics import confusion_matrix,f1_score,recall_score,precision_score
+from sklearn.metrics import confusion_matrix,f1_score,recall_score,precision_score,classification_report
 
 test_data_dir = './dataset_ver2/test_check'
 # test_data_dir = './TWI/test'
@@ -23,8 +23,8 @@ classes = ["晴れ曇り", "雨"]
 # classes = ["sunny", "cloudy"]
 image_size = 224
 num_classes = len(classes)
-model_name = "top_bottom"
-keras_param = "/home/student/e18/e185701/sky_nonsky_ver2/clear_rain/cle_model_ver2/"+str(model_name)+"_aug_2.h5"
+model_name = "3C-CNN"
+keras_param = "/home/student/e18/e185701/sky_nonsky_ver2/clear_rain/cle_model_ver2/"+str(model_name)+"_6_aug_0880.h5"
 img_width, img_height = 224, 224
 
 train_batch_size = 64
@@ -173,11 +173,9 @@ plt.figure()
 cm = confusion_matrix(y_test, p_test,normalize='true')
 df_cm = pd.DataFrame(cm, index=['clear-cloudy', 'rainy'], columns=['clear-cloudy', 'rainy'])
 
-print("適合率:"+str(precision_score(y_test, p_test,average=None)))
-print("再現率"+str(recall_score(y_test, p_test,average=None)))
-print("F値"+str(f1_score(y_test, p_test,average=None)))
+print(classification_report(y_test, p_test,digits=6))
 
-df_cm = sns.heatmap(df_cm, annot=True,cmap='Blues')
-df_cm.set_xlabel("predict label", fontsize = 10)
-df_cm.set_ylabel(" ture label", fontsize = 10)
-plt.savefig("./fig/conf_fig/"+str(model_name)+"/conf_"+str(datetime.datetime.today())+".jpg")
+# df_cm = sns.heatmap(df_cm, vmax=1, vmin=0,annot=True,cmap='Blues')
+# df_cm.set_xlabel("predict label", fontsize = 10)
+# df_cm.set_ylabel(" ture label", fontsize = 10)
+# plt.savefig("./fig/conf_fig/"+str(model_name)+"/conf_"+str(datetime.datetime.today())+".jpg")
